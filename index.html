@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b1026">
+  <title>星盤之書</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=LXGW+WenKai+TC:wght@400;700&display=swap">
+  <link rel="stylesheet" href="css/book.css">
+</head>
+<body>
+  <div class="sky" aria-hidden="true">
+    <span class="sky-star" style="--x:8%;--y:10%;--s:34px;--d:4.2s;--delay:0s"></span>
+    <span class="sky-star" style="--x:88%;--y:7%;--s:26px;--d:5.1s;--delay:-1.3s"></span>
+    <span class="sky-star" style="--x:18%;--y:36%;--s:20px;--d:3.6s;--delay:-2.2s"></span>
+    <span class="sky-star" style="--x:92%;--y:42%;--s:30px;--d:4.8s;--delay:-0.7s"></span>
+    <span class="sky-star" style="--x:6%;--y:70%;--s:24px;--d:5.6s;--delay:-3.1s"></span>
+    <span class="sky-star" style="--x:80%;--y:78%;--s:36px;--d:4.4s;--delay:-1.9s"></span>
+    <span class="sky-star" style="--x:50%;--y:4%;--s:18px;--d:3.9s;--delay:-2.7s"></span>
+    <span class="sky-star" style="--x:40%;--y:94%;--s:22px;--d:5.3s;--delay:-0.4s"></span>
+  </div>
+
+  <main class="app">
+    <!-- 封面畫面:opening.play() 收到的 stageEl 就是這一整塊 -->
+    <section class="screen cover-screen" id="cover-screen">
+      <div class="book-stage" id="book-stage">
+        <div class="book" id="book" role="button" tabindex="0" aria-label="打開星盤之書">
+          <div class="book-cover">
+            <div class="cover-text">
+              <h1 class="cover-title" id="cover-title">星盤之書</h1>
+              <p class="cover-to" id="cover-to"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="cover-hint">點一下,打開你的星盤之書 ✨</p>
+    </section>
+
+    <!-- 閱讀畫面:reader.start() 收到的 containerEl -->
+    <section class="screen reader-screen" id="reader-screen" hidden></section>
+
+    <p class="load-error" id="load-error" role="alert" hidden></p>
+  </main>
+
+  <!-- 外部程式庫(版本寫死):翻頁 page-flip 2.0.7、動畫 GSAP 3.13.0
+       integrity = 檢查碼(sha384),檔案被改過瀏覽器就不執行;換版本時要重算 -->
+  <script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.js"
+          integrity="sha384-L4eWrYFdqQ+LoGA0MMuqLqzV13x7SKkQaqacy4MED8e815dS37tTKlO/6xBEUpZW" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js"
+          integrity="sha384-HOvlOYPIs/zjoIkWUGXkVmXsjr8GuZLV+Q+rcPwmJOVZVpvTSXQChiN4t9Euv9Vc" crossorigin="anonymous"></script>
+
+  <script src="js/content.js"></script>
+  <script src="js/opening.js"></script>
+  <script src="js/reader.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

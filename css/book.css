@@ -1,0 +1,578 @@
+/* 星盤之書:共用樣式
+   區塊分工:
+   - 基本 / 星空 / 封面:T1(這份)
+   - 開書動畫:只改「=== 開書動畫 ===」註解包起來的區塊(T2)
+   - 翻頁閱讀:只改「=== 翻頁閱讀 ===」註解包起來的區塊(T3)
+   圖片網址由 main.js 寫進下面這些變數(--img-*),圖缺檔時會露出底下的漸層,不會壞。 */
+
+:root {
+  --night-1: #0b1026;      /* 深夜藍 */
+  --night-2: #1a1442;      /* 墨紫 */
+  --night-3: #2a1f5c;
+  --gold: #d9b45a;
+  --gold-bright: #f3dc9a;
+  --gold-soft: rgba(217, 180, 90, 0.35);
+  --paper: #f6efdc;
+  --paper-edge: #e6d7b0;
+  --ink: #3a2e22;
+  --ink-soft: #6b5a45;
+
+  --font-body: "LXGW WenKai TC", "Noto Serif TC", "PingFang TC", "Microsoft JhengHei", serif;
+  --font-deco: "Cinzel Decorative", "LXGW WenKai TC", serif;
+
+  --book-w: min(72vw, 340px, calc(62vh * 5 / 7));  /* 封面 5:7 */
+
+  /* 圖片(main.js 會覆寫成完整網址) */
+  --img-cover: none;
+  --img-cover-back: none;
+  --img-paper: none;
+  --img-corner: none;
+  --img-sigil: none;
+  --img-star-a: none;
+  --img-star-b: none;
+  --img-sky: none;
+}
+
+/* ---------- 基本 ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  width: 100%;
+  min-height: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: radial-gradient(ellipse at 50% 30%, var(--night-3) 0%, var(--night-2) 35%, var(--night-1) 75%) fixed;
+  background-color: var(--night-1);
+  color: var(--gold-bright);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+[hidden] { display: none !important; }
+
+.app {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.screen {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
+}
+
+/* 畫面切換時淡入(main.js 在顯示閱讀畫面時加 .is-entering) */
+.screen.is-entering { animation: screen-in 0.6s ease-out both; }
+@keyframes screen-in { from { opacity: 0; } to { opacity: 1; } }
+
+.load-error {
+  position: fixed;
+  inset: auto 16px 24px 16px;
+  margin: 0;
+  padding: 12px 16px;
+  border: 1px solid var(--gold-soft);
+  border-radius: 10px;
+  background: rgba(11, 16, 38, 0.85);
+  text-align: center;
+  font-size: 15px;
+}
+
+/* ---------- 星空 ----------
+   sky.png 鋪滿、置中裁切;缺檔時露出 body 的 CSS 漸層。
+   上面幾顆 star_b.png(.sky-star)慢慢閃爍,位置/大小/速度寫在 index.html 的 --x --y --s --d。 */
+.sky {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  background: var(--img-sky) center / cover no-repeat;
+}
+.sky-star {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--s);
+  height: var(--s);
+  transform: translate(-50%, -50%);
+  background: var(--img-star-b) center / contain no-repeat;
+  opacity: 0.3;
+  animation: twinkle var(--d, 4s) ease-in-out infinite alternate;
+  animation-delay: var(--delay, 0s);
+}
+@keyframes twinkle {
+  0%   { opacity: 0.2; transform: translate(-50%, -50%) scale(0.8); }
+  100% { opacity: 1;   transform: translate(-50%, -50%) scale(1.1); }
+}
+
+/* ---------- 封面畫面 ---------- */
+.cover-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  padding: 24px 16px calc(24px + env(safe-area-inset-bottom));
+  overflow: hidden;
+}
+
+.book-stage {
+  position: relative;
+  width: var(--book-w);
+  aspect-ratio: 5 / 7;
+  perspective: 1600px;
+}
+
+.book {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  outline: none;
+  transform-style: preserve-3d;
+  animation: book-float 4s ease-in-out infinite;
+}
+.book:focus-visible { outline: 2px solid var(--gold); outline-offset: 6px; border-radius: 8px; }
+
+@keyframes book-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-10px); }
+}
+
+.book-cover {
+  position: absolute;
+  inset: 0;
+  border-radius: 4px 10px 10px 4px;
+  background:
+    var(--img-cover) center / cover no-repeat,
+    linear-gradient(160deg, #24306b 0%, #16124a 55%, #0d0a2e 100%);
+  border: 1px solid var(--gold-soft);
+  box-shadow:
+    0 0 24px rgba(243, 220, 154, 0.25),
+    0 18px 40px rgba(0, 0, 0, 0.55);
+  animation: cover-glow 3.2s ease-in-out infinite alternate;
+  overflow: hidden;
+}
+@keyframes cover-glow {
+  from { box-shadow: 0 0 18px rgba(243, 220, 154, 0.18), 0 18px 40px rgba(0, 0, 0, 0.55); }
+  to   { box-shadow: 0 0 42px rgba(243, 220, 154, 0.45), 0 18px 40px rgba(0, 0, 0, 0.55); }
+}
+
+/* 書名、給誰:疊在封面正中間偏上 */
+.cover-text {
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  top: 22%;
+  text-align: center;
+  pointer-events: none;
+}
+.cover-title {
+  margin: 0;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: calc(var(--book-w) * 0.12);
+  letter-spacing: 0.12em;
+  color: var(--gold-bright);
+  text-shadow: 0 0 12px rgba(243, 220, 154, 0.6), 0 2px 2px rgba(0, 0, 0, 0.5);
+}
+.cover-to {
+  margin: 0.6em 0 0;
+  font-size: calc(var(--book-w) * 0.055);
+  letter-spacing: 0.1em;
+  color: var(--gold);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+.cover-to:empty { display: none; }
+
+.cover-hint {
+  margin: 0;
+  font-size: 16px;
+  letter-spacing: 0.08em;
+  color: var(--gold-bright);
+  text-align: center;
+  animation: hint-pulse 2.4s ease-in-out infinite;
+}
+@keyframes hint-pulse {
+  0%, 100% { opacity: 0.55; }
+  50%      { opacity: 1; }
+}
+
+/* === 開書動畫 === */
+/* opening.js 開書時才補上的零件都是 op- 開頭;動畫只動 transform / opacity。 */
+
+/* 快速路線(減少動態 / 動畫程式庫沒載到):直接淡出 */
+.cover-screen.is-leaving {
+  transition: opacity var(--op-fast, 0.3s) ease;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* 開書中:停掉飄動和封面呼吸光,不能再點 */
+.cover-screen.is-opening { pointer-events: none; }
+.cover-screen.is-opening .book,
+.cover-screen.is-opening .book-cover,
+.cover-screen.is-opening .cover-hint { animation: none; }
+.cover-screen.is-opening .book { cursor: default; z-index: 1; }
+.cover-screen.is-opening .book-stage { will-change: transform; }
+
+/* 背後的光暈 */
+.op-glow {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  width: 150vmin;
+  height: 150vmin;
+  margin: -75vmin 0 0 -75vmin;
+  border-radius: 50%;
+  background: radial-gradient(circle,
+    rgba(255, 244, 214, 0.55) 0%,
+    rgba(243, 220, 154, 0.28) 22%,
+    rgba(217, 180, 90, 0.12) 42%,
+    rgba(217, 180, 90, 0) 66%);
+  opacity: 0;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+/* 書後面的魔法陣 */
+.op-sigil {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 170%;
+  aspect-ratio: 1;
+  margin: -85% 0 0 -85%;   /* 百分比都以書寬計算:寬高 170%,往左上退一半 */
+  background: var(--img-sigil) center / contain no-repeat;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 0;
+  will-change: transform, opacity;
+}
+
+/* 書頁(封面翻開後露出來);右邊和下面疊幾層當成紙的厚度 */
+.op-pages {
+  position: absolute;
+  top: 1.5%;
+  bottom: 1.5%;
+  left: 0;
+  right: 2%;
+  border-radius: 2px 6px 6px 2px;
+  background:
+    var(--img-paper) center / cover no-repeat,
+    linear-gradient(180deg, var(--paper) 0%, #efe4c6 100%);
+  box-shadow:
+    1px 1px 0 #efe3c2,
+    2px 2px 0 #d9c79a,
+    3px 3px 0 #efe3c2,
+    4px 4px 0 #cdb985,
+    5px 5px 0 #e6d7b0,
+    0 16px 36px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+/* 書頁中間的金光(星星從這裡飛出) */
+.op-light {
+  position: absolute;
+  inset: -20%;
+  background: radial-gradient(circle,
+    rgba(255, 250, 230, 0.95) 0%,
+    rgba(243, 220, 154, 0.6) 26%,
+    rgba(217, 180, 90, 0.18) 48%,
+    rgba(217, 180, 90, 0) 68%);
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+/* 封面「門板」:以左邊為軸翻開。正面 = 原本的 .book-cover,背面 = cover_back.png,
+   四周用細條做出書皮厚度 */
+.op-hinge {
+  --op-thick: calc(var(--book-w) * 0.035);
+  position: absolute;
+  inset: 0;
+  transform-origin: left center;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+.op-hinge > .book-cover {
+  transform: translateZ(var(--op-thick));
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  box-shadow: 0 0 30px rgba(243, 220, 154, 0.35);
+}
+.op-cover-back {
+  position: absolute;
+  inset: 0;
+  border-radius: 10px 4px 4px 10px;
+  background:
+    var(--img-cover-back) center / cover no-repeat,
+    linear-gradient(200deg, #24306b 0%, #16124a 55%, #0d0a2e 100%);
+  border: 1px solid var(--gold-soft);
+  transform: rotateY(180deg);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.op-edge {
+  position: absolute;
+  background: linear-gradient(90deg, #1b1650, #3a2f7e 45%, #c9a24e 50%, #3a2f7e 55%, #1b1650);
+}
+.op-edge-r {
+  top: 0;
+  right: 0;
+  width: var(--op-thick);
+  height: 100%;
+  transform-origin: right center;
+  transform: rotateY(90deg);
+}
+.op-edge-t,
+.op-edge-b {
+  left: 0;
+  width: 100%;
+  height: var(--op-thick);
+  background: linear-gradient(180deg, #1b1650, #3a2f7e 45%, #c9a24e 50%, #3a2f7e 55%, #1b1650);
+}
+.op-edge-t { top: 0;    transform-origin: center top;    transform: rotateX(90deg); }
+.op-edge-b { bottom: 0; transform-origin: center bottom; transform: rotateX(-90deg); }
+
+/* 飛出來的星星 */
+.op-stars {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+  overflow: hidden;
+}
+.op-star {
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0;
+  background: center / contain no-repeat;
+  will-change: transform, opacity;
+}
+.op-star-a { background-image: var(--img-star-a), radial-gradient(circle, #fff6d8 0%, rgba(243, 220, 154, 0.8) 30%, rgba(243, 220, 154, 0) 65%); }
+.op-star-b { background-image: var(--img-star-b), radial-gradient(circle, #fffbe8 0%, rgba(243, 220, 154, 0.7) 35%, rgba(243, 220, 154, 0) 70%); }
+/* === 開書動畫(結束) === */
+
+/* ---------- 減少動態 ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .sky-star,
+  .book, .book-cover, .cover-hint { animation: none; }
+  .screen.is-entering { animation-duration: 0.01s; }
+}
+
+/* === 翻頁閱讀 === */
+/* reader.js 會在 #reader-screen 上設 --page-w / --page-h(一頁的大小)和 --reader-fs(內文字級)。
+   兩頁模式加 .is-spread。每頁:.flip-page > 四個 .page-corner + .page-body。 */
+.reader-screen--flip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 16px calc(8px + env(safe-area-inset-bottom));
+  overflow: hidden;
+  --page-w: 340px;
+  --page-h: 476px;
+  --reader-fs: 16px;
+}
+.reader-stage {
+  position: relative;
+  flex: 1 1 auto;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.reader-book { position: relative; }
+.reader-book .stf__wrapper { position: relative; width: 100%; height: 100%; }
+.reader-book.stf__parent { filter: drop-shadow(0 18px 30px rgba(0, 0, 0, 0.5)); }
+
+/* 一張紙:paper.png,缺圖時露出米色漸層 */
+.flip-page {
+  position: relative;
+  overflow: hidden;
+  background:
+    var(--img-paper) center / 100% 100% no-repeat,
+    linear-gradient(180deg, var(--paper) 0%, #efe4c6 100%);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: var(--reader-fs);
+  line-height: 1.85;
+}
+.flip-page.is-measure {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* 四角:corner.png 是左上角,其他三角翻轉 */
+.page-corner {
+  position: absolute;
+  width: calc(var(--page-w) * 0.2);
+  height: calc(var(--page-w) * 0.2);
+  background: var(--img-corner) left top / contain no-repeat;
+  pointer-events: none;
+}
+.page-corner--tl { left: 0; top: 0; }
+.page-corner--tr { right: 0; top: 0; transform: scaleX(-1); }
+.page-corner--bl { left: 0; bottom: 0; transform: scaleY(-1); }
+.page-corner--br { right: 0; bottom: 0; transform: scale(-1, -1); }
+
+/* 文字區:離紙邊留空,不碰到四角花紋。分頁就是照這一塊的高度量的。 */
+.page-body {
+  position: absolute;
+  left: 11%;
+  right: 11%;
+  top: calc(var(--page-w) * 0.13);
+  bottom: calc(var(--page-w) * 0.13);
+  /* 不裁切:字往上飄的途中會暫時低 14px,裁掉會看到最後一行被切 */
+}
+.page-heading {
+  margin: 1.2em 0 0;
+  font-size: 1.22em;
+  line-height: 1.5;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #7a5a1e;
+  text-align: center;
+}
+.page-heading::after {
+  content: "";
+  display: block;
+  width: 3em;
+  height: 1px;
+  margin: 0.45em auto 0.1em;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+.page-para {
+  margin: 0.75em 0 0;
+  white-space: pre-line;   /* 段落內的單一換行照樣換行 */
+  text-align: justify;
+  overflow-wrap: anywhere;
+}
+.page-para.is-split { text-align-last: justify; } /* 接到下一頁的段落,頁底那行排滿 */
+.page-body > :first-child { margin-top: 0; }
+
+/* 扉頁 */
+.flip-page--title .page-body,
+.flip-page--ending .page-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.title-star {
+  width: calc(var(--page-w) * 0.16);
+  height: calc(var(--page-w) * 0.16);
+  margin-bottom: 0.8em;
+  background:
+    var(--img-star-a) center / contain no-repeat,
+    radial-gradient(circle, rgba(217, 180, 90, 0.9) 0 12%, rgba(217, 180, 90, 0) 13%);
+}
+.title-name {
+  margin: 0 0 0.6em;
+  font-size: 1.7em;
+  line-height: 1.3;
+  letter-spacing: 0.14em;
+  color: #6b4c17;
+}
+.title-to { margin: 0 0 1.2em; font-size: 1.15em; letter-spacing: 0.1em; }
+.title-meta { margin: 0.1em 0; color: var(--ink-soft); font-size: 0.92em; letter-spacing: 0.06em; }
+
+/* 結尾頁 */
+.ending-stars { display: flex; gap: 0.6em; align-items: center; margin-bottom: 1.4em; }
+.ending-star {
+  width: calc(var(--page-w) * 0.09);
+  height: calc(var(--page-w) * 0.09);
+  background:
+    var(--img-star-a) center / contain no-repeat,
+    radial-gradient(circle, rgba(217, 180, 90, 0.9) 0 14%, rgba(217, 180, 90, 0) 15%);
+}
+.ending-star:nth-child(2) { width: calc(var(--page-w) * 0.13); height: calc(var(--page-w) * 0.13); }
+.ending-text { margin: 0; font-size: 1.15em; letter-spacing: 0.08em; color: #7a5a1e; }
+
+/* 字飄進來:沒看過的頁先藏字;第一次翻到時一起淡入上飄(段落間隔 0.08 秒) */
+.flip-page.is-unseen .fx { opacity: 0; }
+.flip-page.is-revealing .fx {
+  animation: fx-in 0.7s cubic-bezier(0.22, 0.8, 0.3, 1) both;
+  animation-delay: calc(var(--fx-i, 0) * 0.08s);
+}
+@keyframes fx-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* 底部:‹ 頁碼 › */
+.reader-nav {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  height: 56px;
+}
+.reader-arrow {
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--gold-soft);
+  border-radius: 50%;
+  background: rgba(11, 16, 38, 0.55);
+  color: var(--gold-bright);
+  font-family: var(--font-body);
+  font-size: 26px;
+  line-height: 1;
+  padding: 0 0 4px;
+  cursor: pointer;
+  transition: opacity 0.2s, background 0.2s;
+}
+.reader-arrow:hover:not(:disabled) { background: rgba(42, 31, 92, 0.8); }
+.reader-arrow:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+.reader-arrow:disabled { opacity: 0.3; cursor: default; }
+.reader-count {
+  min-width: 5.5em;
+  text-align: center;
+  font-size: 15px;
+  letter-spacing: 0.08em;
+  color: var(--gold-bright);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 翻頁程式庫沒載到時:一頁一頁往下排 */
+.reader-book.is-fallback { display: flex; flex-direction: column; gap: 16px; }
+
+/* 翻頁閱讀出錯時(main.js 的 showPlainBook):整本書由上往下排在一張紙上 */
+.reader-plain {
+  box-sizing: border-box;
+  width: min(100%, 640px);
+  margin: 16px auto 40px;
+  padding: 28px 22px;
+  border-radius: 6px;
+  background: #f4ead2;   /* 素色就好:紙張圖被拉長會出現金線 */
+  color: var(--ink);
+  font-family: "LXGW WenKai TC", serif;
+  font-size: 17px;
+  line-height: 1.9;
+  overflow-wrap: anywhere;
+}
+.reader-plain-title, .reader-plain-heading { margin: 1.2em 0 0.6em; text-align: center; color: var(--ink); }
+.reader-plain-title { margin-top: 0; font-size: 1.6em; }
+.reader-plain-heading { font-size: 1.2em; }
+.reader-plain-to, .reader-plain-info, .reader-plain-end { text-align: center; color: var(--ink-soft); }
+.reader-plain-p { margin: 0 0 0.9em; white-space: pre-line; }
+.reader-plain-end { margin-top: 2em; }
+
+@media (prefers-reduced-motion: reduce) {
+  .flip-page.is-revealing .fx { animation-duration: 0.01s; animation-delay: 0s; }
+}
+/* === 翻頁閱讀(結束) === */
