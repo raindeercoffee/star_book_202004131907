@@ -5,7 +5,7 @@
   'use strict';
 
   var KEY = 'starbook_tune';
-  var DEFAULTS = { 'title-x': 0, 'title-y': 22, 'title-size': 0.12, 'to-x': 0, 'to-y': 35, 'to-size': 0.055 };
+  var DEFAULTS = { 'title-x': 0, 'title-y': 10, 'title-size': 0.12, 'to-x': 0, 'to-y': 24, 'to-size': 0.055 };
   var STEP = { x: 1, y: 1, size: 0.005 };
   var rootStyle = document.documentElement.style;
 
