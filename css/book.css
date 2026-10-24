@@ -358,8 +358,9 @@ body {
   background: center / contain no-repeat;
   will-change: transform, opacity;
 }
-.op-star-a { background-image: var(--img-star-a), radial-gradient(circle, #fff6d8 0%, rgba(243, 220, 154, 0.8) 30%, rgba(243, 220, 154, 0) 65%); }
-.op-star-b { background-image: var(--img-star-b), radial-gradient(circle, #fffbe8 0%, rgba(243, 220, 154, 0.7) 35%, rgba(243, 220, 154, 0) 70%); }
+/* Codex 的正式星星圖本身就有光暈,不再墊漸層(墊了會太亮、變成一團) */
+.op-star-a { background-image: var(--img-star-a); }
+.op-star-b { background-image: var(--img-star-b); }
 /* === 開書動畫(結束) === */
 
 /* ---------- 減少動態 ---------- */
