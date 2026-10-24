@@ -97,6 +97,10 @@ body {
   overflow: hidden;
   background: var(--img-sky) center / cover no-repeat;
 }
+/* 電腦(畫面比高還寬)改用橫的星空;橫星空沒有時,下面那層直星空還在 */
+@media (min-aspect-ratio: 1/1) {
+  .sky { background: var(--img-sky-wide) center / cover no-repeat, var(--img-sky) center / cover no-repeat; }
+}
 .sky-star {
   position: absolute;
   left: var(--x);
@@ -521,6 +525,51 @@ body {
 }
 .ending-star:nth-child(2) { width: calc(var(--page-w) * 0.13); height: calc(var(--page-w) * 0.13); }
 .ending-text { margin: 0; font-size: 1.15em; letter-spacing: 0.08em; color: #7a5a1e; }
+.ending-fin {
+  margin: 0 0 0.9em;
+  font-family: var(--font-deco);
+  font-size: 1.6em;
+  letter-spacing: 0.12em;
+  color: #8a6420;
+}
+
+/* 頁角的小提示「next ›」:不在文字區裡,不影響分頁 */
+.page-next {
+  position: absolute;
+  right: 12%;
+  bottom: calc(var(--page-w) * 0.06);
+  font-family: var(--font-deco);
+  font-size: 0.72em;
+  letter-spacing: 0.14em;
+  color: #9a7428;
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+/* 封底:深色硬殼 + 小魔法陣 + 書名 */
+.flip-page--back {
+  background:
+    var(--img-cover-back) center / cover no-repeat,
+    linear-gradient(200deg, #24306b 0%, #16124a 55%, #0d0a2e 100%);
+  color: var(--gold-bright);
+}
+.flip-page--back .page-corner { display: none; }
+.flip-page--back .page-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.back-sigil {
+  width: calc(var(--page-w) * 0.34);
+  height: calc(var(--page-w) * 0.34);
+  margin-bottom: 1.2em;
+  background: var(--img-sigil) center / contain no-repeat;
+  opacity: 0.85;
+}
+.back-title { margin: 0 0 0.5em; font-size: 1.25em; letter-spacing: 0.25em; text-shadow: 0 0 10px rgba(243, 220, 154, 0.5); }
+.back-fin { margin: 0; font-family: var(--font-deco); font-size: 0.8em; letter-spacing: 0.2em; opacity: 0.75; }
 
 /* 字飄進來:沒看過的頁先藏字;第一次翻到時一起淡入上飄(段落間隔 0.08 秒) */
 .flip-page.is-unseen .fx { opacity: 0; }

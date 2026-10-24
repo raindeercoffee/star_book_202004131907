@@ -22,7 +22,8 @@
     sigil: 'sigil',
     starA: 'star_a',
     starB: 'star_b',
-    sky: 'sky'
+    sky: 'sky',
+    skyWide: 'sky_wide'
   };
   var CSS_VARS = {
     cover: '--img-cover',
@@ -32,7 +33,8 @@
     sigil: '--img-sigil',
     starA: '--img-star-a',
     starB: '--img-star-b',
-    sky: '--img-sky'
+    sky: '--img-sky',
+    skyWide: '--img-sky-wide'
   };
 
   // 開書動畫一開始就要用到的圖:進頁面就先載
@@ -41,14 +43,16 @@
   var WAKING_HINT = '書正在醒來…';
 
   // 依網址決定讀哪裡。search = location.search(例:'?book=202004131907')
-  function resolvePaths(search) {
+  // version = 組書工具寫在 <meta name="starbook-version"> 的版本記號;成品的圖網址加 ?v=,改版後瀏覽器才不會一直用舊圖
+  function resolvePaths(search, version) {
     var m = /[?&]book=([^&]*)/.exec(search || '');
     var id = m ? decodeURIComponent(m[1]) : '';
     var dev = /^\d{12}$/.test(id);
     var base = dev ? '../assets/book/' : 'assets/book/';
     var ext = dev ? '.png' : '.webp';   // 成品的圖由組書工具轉成 webp
+    var tag = !dev && version ? '?v=' + encodeURIComponent(version) : '';
     var images = {};
-    Object.keys(IMAGES).forEach(function (key) { images[key] = base + IMAGES[key] + ext; });
+    Object.keys(IMAGES).forEach(function (key) { images[key] = base + IMAGES[key] + ext + tag; });
     return { content: dev ? '../books/' + id + '/content.txt' : 'content.txt', images: images };
   }
 
@@ -211,17 +215,23 @@
     });
   }
 
+  function pageVersion() {
+    var meta = document.querySelector('meta[name="starbook-version"]');
+    return meta ? meta.getAttribute('content') : '';
+  }
+
   // 網址有 ?tune=1 才載入封面文字調控板(客人看不到)
-  function loadTuner() {
+  function loadTuner(version) {
     if (new URLSearchParams(root.location.search).get('tune') !== '1') return;
     var s = document.createElement('script');
-    s.src = 'js/tune.js';
+    s.src = 'js/tune.js' + (version ? '?v=' + encodeURIComponent(version) : '');
     document.body.appendChild(s);
   }
 
   function init() {
-    loadTuner();
-    var paths = resolvePaths(root.location.search);
+    var version = pageVersion();
+    loadTuner(version);
+    var paths = resolvePaths(root.location.search, version);
     setupAssets(paths.images);
     var preload = startPreload(SB.assets);
 

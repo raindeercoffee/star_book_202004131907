@@ -128,7 +128,20 @@
     }
   }
 
-  var api = { paginate: paginate, planBlocks: planBlocks, sliceLines: sliceLines, watchFonts: watchFonts };
+  // 書尾:扉頁 1 張 + 內文 textPages 張 + (空白) + 結尾頁 + 封底。
+  // 兩頁模式要讓最後一個畫面剛好是「結尾頁|封底」,所以結尾頁要落在左邊(雙數位置)。
+  function bookTail(textPages, spread) {
+    return { blank: !!spread && (1 + textPages) % 2 === 1 };
+  }
+
+  // 頁角的「next ›」小提示:手機每頁都放;電腦只放右頁(單數位置);結尾頁、封底不放
+  function showsNextHint(index, kind, spread) {
+    if (kind === 'ending' || kind === 'back') return false;
+    return spread ? index % 2 === 1 : true;
+  }
+
+  var api = { paginate: paginate, planBlocks: planBlocks, sliceLines: sliceLines, watchFonts: watchFonts,
+              bookTail: bookTail, showsNextHint: showsNextHint };
   if (typeof module === 'object' && module.exports) module.exports = api;
 
   // ---------- 網頁部分(只在瀏覽器跑) ----------
@@ -294,7 +307,20 @@
       stars.setAttribute('aria-hidden', 'true');
       for (var i = 0; i < 3; i++) stars.appendChild(el('span', 'ending-star'));
       p.body.appendChild(stars);
+      p.body.insertBefore(el('p', 'ending-fin', 'The End'), stars);
       p.body.appendChild(el('p', 'ending-text', '願星光照亮你的路 ✨'));
+      return p.page;
+    }
+
+    // 封底:深色硬殼,中間一個小魔法陣和書名,看到它就知道書讀完了
+    function buildBackPage() {
+      var p = makePage('flip-page--back');
+      p.page.setAttribute('data-density', 'hard');
+      var sigil = el('div', 'back-sigil');
+      sigil.setAttribute('aria-hidden', 'true');
+      p.body.appendChild(sigil);
+      p.body.appendChild(el('p', 'back-title', meta.title || '星盤之書'));
+      p.body.appendChild(el('p', 'back-fin', '— fin —'));
       return p.page;
     }
 
@@ -315,15 +341,21 @@
         });
         list.push({ page: p.page, pos: posOf(pieces[0]) });
       });
-      // 兩頁模式:總頁數湊成雙數,結尾頁才會在右邊
-      if (layout.spread && (plan.length % 2 === 1)) {
+      // 兩頁模式:最後一個畫面要剛好是「結尾頁|封底」
+      if (bookTail(plan.length, layout.spread).blank) {
         list.push({ page: makePage('flip-page--blank').page, pos: list[list.length - 1].pos + 1 });
       }
-      list.push({ page: buildEndingPage(), pos: Infinity });
-      list.forEach(function (x) {
+      list.push({ page: buildEndingPage(), pos: Infinity, kind: 'ending' });
+      list.push({ page: buildBackPage(), pos: Infinity, kind: 'back' });
+      list.forEach(function (x, i) {
         var body = x.page.querySelector('.page-body');
         addFx(body);
         if (x.pos > seenMax) x.page.classList.add('is-unseen');
+        if (showsNextHint(i, x.kind || 'text', layout.spread)) {
+          var hint = el('span', 'page-next', 'next ›');
+          hint.setAttribute('aria-hidden', 'true');
+          x.page.appendChild(hint);
+        }
       });
       return list;
     }
