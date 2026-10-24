@@ -569,7 +569,17 @@ body {
   opacity: 0.85;
 }
 .back-title { margin: 0 0 0.5em; font-size: 1.25em; letter-spacing: 0.25em; text-shadow: 0 0 10px rgba(243, 220, 154, 0.5); }
-.back-fin { margin: 0; font-family: var(--font-deco); font-size: 0.8em; letter-spacing: 0.2em; opacity: 0.75; }
+/* 扉頁下方的翻頁提示:箭頭輕輕往左滑 */
+.swipe-hint {
+  margin: 2.2em 0 0;
+  font-size: 0.8em;
+  letter-spacing: 0.08em;
+  color: #9a7428;
+  opacity: 0.85;
+}
+.swipe-arrow { display: inline-block; font-size: 1.3em; animation: swipe-nudge 1.8s ease-in-out infinite; }
+@keyframes swipe-nudge { 0%, 100% { transform: translateX(0); opacity: 0.5; } 50% { transform: translateX(-6px); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .swipe-arrow { animation: none; } }
 
 /* 字飄進來:沒看過的頁先藏字;第一次翻到時一起淡入上飄(段落間隔 0.08 秒) */
 .flip-page.is-unseen .fx { opacity: 0; }

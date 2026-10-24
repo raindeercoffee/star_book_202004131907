@@ -140,7 +140,20 @@
     return spread ? index % 2 === 1 : true;
   }
 
-  var api = { paginate: paginate, planBlocks: planBlocks, sliceLines: sliceLines, watchFonts: watchFonts,
+  // 排好之後自己檢查(fits 由瀏覽器實際排一次判斷);不合格就把頁高少一行再排,最多試 maxTries 次。
+  // 原因:iPhone 等瀏覽器量字寬跟實際排版有時差一點,拆段的頁尾會多出一行只有一兩個字。
+  function paginateUntilFits(items, pageHeight, lineHeight, fits, maxTries) {
+    var tries = Math.max(1, maxTries || 1);
+    var result = null;
+    for (var i = 0; i < tries; i++) {
+      var h = pageHeight - i * lineHeight;
+      result = { pages: paginate(items, h), shrink: i * lineHeight };
+      if (fits(result.pages, h)) return result;
+    }
+    return result;
+  }
+
+  var api = { paginateUntilFits: paginateUntilFits, paginate: paginate, planBlocks: planBlocks, sliceLines: sliceLines, watchFonts: watchFonts,
               bookTail: bookTail, showsNextHint: showsNextHint };
   if (typeof module === 'object' && module.exports) module.exports = api;
 
@@ -280,8 +293,44 @@
           keepWithNext: b.keepWithNext
         };
       });
+      var firstPara = els.filter(function (node, i) { return blocks[i].kind === 'para'; })[0];
+      var lineHeight = firstPara ? parseFloat(getComputedStyle(firstPara).lineHeight) || 20 : 20;
       stage.removeChild(probe.page);
-      return { items: items, pageHeight: pageHeight - 1 }; // 留 1px 保險
+      return { items: items, pageHeight: pageHeight - 1, lineHeight: lineHeight }; // 留 1px 保險
+    }
+
+    // 某一頁的內容(標題/段落,拆段的照行切好)
+    function pageNodes(pieces, m) {
+      return pieces.map(function (piece) {
+        var b = blocks[piece.index];
+        var item = m.items[piece.index];
+        var whole = piece.from === 0 && piece.to >= item.lines;
+        var text = whole ? b.text : sliceLines(b.text, item.lineStarts, piece.from, piece.to);
+        var node = blockEl(b, text);
+        if (piece.to < item.lines) node.classList.add('is-split'); // 段落接到下一頁:最後一行也排滿
+        return { node: node, piece: piece, item: item };
+      });
+    }
+
+    // 在看不見的量測頁裡把每一頁真的排一次:字不能超出紙,拆開的段落行數要跟算好的一樣
+    function pagesFit(plan, m, layout) {
+      var probe = makePage('is-measure');
+      probe.page.style.width = layout.pageW + 'px';
+      probe.page.style.height = layout.pageH + 'px';
+      stage.appendChild(probe.page);
+      var ok = plan.every(function (pieces) {
+        probe.body.textContent = '';
+        var list = pageNodes(pieces, m);
+        list.forEach(function (x) { probe.body.appendChild(x.node); });
+        if (probe.body.scrollHeight > probe.body.clientHeight + 1) return false;
+        return list.every(function (x) {
+          var whole = x.piece.from === 0 && x.piece.to >= x.item.lines;
+          if (whole || x.node.tagName !== 'P') return true;
+          return measureLineStarts(x.node).length <= x.piece.to - x.piece.from;
+        });
+      });
+      stage.removeChild(probe.page);
+      return ok;
     }
 
     function addFx(body) {
@@ -298,6 +347,12 @@
       if (meta.to) p.body.appendChild(el('p', 'title-to', '給 ' + meta.to));
       if (meta.birth) p.body.appendChild(el('p', 'title-meta', meta.birth));
       if (meta.place) p.body.appendChild(el('p', 'title-meta', meta.place));
+      // 翻頁提示:怕只注意到下面的按鈕,錯過用手翻書的感覺(按鈕照樣保留)
+      var touch = !!(root.matchMedia && root.matchMedia('(pointer: coarse)').matches);
+      var hint = el('p', 'swipe-hint');
+      hint.appendChild(el('span', 'swipe-arrow', '‹'));
+      hint.appendChild(document.createTextNode(touch ? ' 手指往左滑書頁，就能翻頁' : ' 拖曳書角，就能翻頁'));
+      p.body.appendChild(hint);
       return p.page;
     }
 
@@ -320,25 +375,18 @@
       sigil.setAttribute('aria-hidden', 'true');
       p.body.appendChild(sigil);
       p.body.appendChild(el('p', 'back-title', meta.title || '星盤之書'));
-      p.body.appendChild(el('p', 'back-fin', '— fin —'));
       return p.page;
     }
 
     function buildPages(layout) {
       var m = measure(layout);
-      var plan = paginate(m.items, m.pageHeight);
+      var plan = paginateUntilFits(m.items, m.pageHeight, m.lineHeight, function (pages) {
+        return pagesFit(pages, m, layout);
+      }, 4).pages;
       var list = [{ page: buildTitlePage(), pos: -1 }];
       plan.forEach(function (pieces) {
         var p = makePage('flip-page--text');
-        pieces.forEach(function (piece) {
-          var b = blocks[piece.index];
-          var item = m.items[piece.index];
-          var whole = piece.from === 0 && piece.to >= item.lines;
-          var text = whole ? b.text : sliceLines(b.text, item.lineStarts, piece.from, piece.to);
-          var node = blockEl(b, text);
-          if (piece.to < item.lines) node.classList.add('is-split'); // 段落接到下一頁:最後一行也排滿
-          p.body.appendChild(node);
-        });
+        pageNodes(pieces, m).forEach(function (x) { p.body.appendChild(x.node); });
         list.push({ page: p.page, pos: posOf(pieces[0]) });
       });
       // 兩頁模式:最後一個畫面要剛好是「結尾頁|封底」
