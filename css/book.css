@@ -168,26 +168,45 @@ body {
 }
 
 /* 書名、給誰:疊在封面正中間偏上 */
+/* 封面上的字:書名、「給 ○○」各自可以調位置和大小(調控板 ?tune=1 調好的數字填在這裡)
+   y = 離封面頂端幾 %;x = 往右移幾 %(負的往左);size = 字大小是書寬的幾倍 */
+:root {
+  --title-x: 0;
+  --title-y: 22;
+  --title-size: 0.12;
+  --to-x: 0;
+  --to-y: 35;
+  --to-size: 0.055;
+}
 .cover-text {
   position: absolute;
-  left: 10%;
-  right: 10%;
-  top: 22%;
+  inset: 0;
   text-align: center;
   pointer-events: none;
 }
+.cover-title,
+.cover-to {
+  position: absolute;
+  left: 0;
+  right: 0;
+  white-space: nowrap;
+}
 .cover-title {
+  top: calc(var(--title-y) * 1%);
+  transform: translateX(calc(var(--title-x) * 1%));
   margin: 0;
   font-family: var(--font-body);
   font-weight: 700;
-  font-size: calc(var(--book-w) * 0.12);
+  font-size: calc(var(--book-w) * var(--title-size));
   letter-spacing: 0.12em;
   color: var(--gold-bright);
   text-shadow: 0 0 12px rgba(243, 220, 154, 0.6), 0 2px 2px rgba(0, 0, 0, 0.5);
 }
 .cover-to {
-  margin: 0.6em 0 0;
-  font-size: calc(var(--book-w) * 0.055);
+  top: calc(var(--to-y) * 1%);
+  transform: translateX(calc(var(--to-x) * 1%));
+  margin: 0;
+  font-size: calc(var(--book-w) * var(--to-size));
   letter-spacing: 0.1em;
   color: var(--gold);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);

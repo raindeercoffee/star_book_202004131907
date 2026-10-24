@@ -211,7 +211,16 @@
     });
   }
 
+  // 網址有 ?tune=1 才載入封面文字調控板(客人看不到)
+  function loadTuner() {
+    if (new URLSearchParams(root.location.search).get('tune') !== '1') return;
+    var s = document.createElement('script');
+    s.src = 'js/tune.js';
+    document.body.appendChild(s);
+  }
+
   function init() {
+    loadTuner();
     var paths = resolvePaths(root.location.search);
     setupAssets(paths.images);
     var preload = startPreload(SB.assets);
